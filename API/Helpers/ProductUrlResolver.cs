@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace API.Helpers;
 
+#nullable disable
 public class ProductUrlResolver : IValueResolver<Product, ProductToReturnDto, string>
 {
     private readonly IConfiguration _config;
