@@ -27,7 +27,7 @@ public class BuggyController : BaseApiController
     {
         var thing = _context.Products.Find(42);
 
-        var thingToReturn = thing.ToString();
+        var thingToReturn = thing!.ToString();
 
         return Ok();
     }
