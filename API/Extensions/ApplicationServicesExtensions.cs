@@ -4,58 +4,53 @@ using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using Infrastructure.Services;
 
-namespace API.Extensions
+namespace API.Extensions;
+
+public static class ApplicationServicesExtensions
 {
-    public static class ApplicationServicesExtensions
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services,
+        IConfiguration config)
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services,
-            IConfiguration config)
+        services.AddDbContext<StoreContext>(opt =>
         {
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
-            services.AddDbContext<StoreContext>(opt =>
-            {
-                opt.UseSqlite(config.GetConnectionString("DefaultConnection"));
-            });
+            opt.UseSqlite(config.GetConnectionString("DefaultConnection"));
+        });
 
-            services.AddSingleton<IConnectionMultiplexer>(c => {
-                var options = ConfigurationOptions.Parse(config.GetConnectionString("Redis")!);
-                return ConnectionMultiplexer.Connect(options);
-            });
-            services.AddScoped<IBasketRepository, BasketRepository>();
-            services.AddScoped<IProductRepository, ProductRepository>();
-            services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            services.Configure<ApiBehaviorOptions>(options =>
+        services.AddSingleton<IConnectionMultiplexer>(c => {
+            var options = ConfigurationOptions.Parse(config.GetConnectionString("Redis")!);
+            return ConnectionMultiplexer.Connect(options);
+        });
+        services.AddScoped<IBasketRepository, BasketRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = actionContext =>
             {
-                options.InvalidModelStateResponseFactory = actionContext =>
+                var errors = actionContext.ModelState
+                    .Where(e => e.Value!.Errors.Count > 0)
+                    .SelectMany(x => x.Value!.Errors)
+                    .Select(x => x.ErrorMessage).ToArray();
+                var errorResponse = new ApiValidationErrorResponse
                 {
-                    var errors = actionContext.ModelState
-                        .Where(e => e.Value!.Errors.Count > 0)
-                        .SelectMany(x => x.Value!.Errors)
-                        .Select(x => x.ErrorMessage).ToArray();
-                    var errorResponse = new ApiValidationErrorResponse
-                    {
-                        Errors = errors
-                    };
-                    return new BadRequestObjectResult(errorResponse);
+                    Errors = errors
                 };
-            });
+                return new BadRequestObjectResult(errorResponse);
+            };
+        });
 
-            services.AddCors(opt =>
+        services.AddCors(opt =>
+               {
+                   opt.AddPolicy("CorsPolicy", policy =>
                    {
-                       opt.AddPolicy("CorsPolicy", policy =>
-                       {
-                           policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200");
-                       });
+                       policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200");
                    });
-            return services;
-        }
+               });
+        return services;
     }
 }

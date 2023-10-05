@@ -1,11 +1,24 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace API.Dtos;
-#nullable disable
+
 public class AddressDto
 {
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public string Street { get; set; }
-    public string City { get; set; }
-    public string State { get; set; }
-    public string Zipcode { get; set; }
+    [Required]
+    public string FirstName { get; set; } = null!;
+
+    [Required]
+    public string LastName { get; set; } = null!;
+
+    [Required]
+    public string Street { get; set; } = null!;
+
+    [Required]
+    public string City { get; set; } = null!;
+
+    [Required]
+    public string State { get; set; } = null!;
+
+    [Required]
+    public string ZipCode { get; set; } = null!;
 }
