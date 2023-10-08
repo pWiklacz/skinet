@@ -20,5 +20,5 @@ public class AddressDto
     public string State { get; set; } = null!;
 
     [Required]
-    public string ZipCode { get; set; } = null!;
+    public string Zipcode { get; set; } = null!;
 }
